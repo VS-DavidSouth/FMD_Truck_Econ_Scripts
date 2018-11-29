@@ -12,27 +12,31 @@ epidemic_curve_CSV = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_s
 FLAPS = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Source_Data\FLAPS_National_Farm_File_MI.csv'
 output_GDB = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations.gdb'
 
-# Generate a numpy array based on epidemic_curve_CSV.
-# This needs to be tailored if the CSV is replaced or altered!
-epidemic_curve = []
-with open(epidemic_curve_CSV) as csv_file:
-    reader = csv.reader(csv_file, delimiter=',')
-    for row in reader:
-        if not row[0] == 'First day of the week':
-            epidemic_curve.append(row[1:])
-epidemic_curve = np.array(epidemic_curve)
-print "count epi curve " + str(len(epidemic_curve)) # REMOVE THIS LATER
+def read_CSVs():
+    # Generate a numpy array based on epidemic_curve_CSV.
+    # This needs to be tailored if the CSV is replaced or altered!
+    epidemic_curve = []
+    with open(epidemic_curve_CSV) as csv_file:
+        reader = csv.reader(csv_file, delimiter=',')
+        for row in reader:
+            if not row[0] == 'First day of the week':
+                epidemic_curve.append(row[1:])
+    epidemic_curve = np.array(epidemic_curve)
 
-# Generate a numpy array from FLAPS. This will be used to add to and remove from
-# the currently_infected_farms array.
-FLAPS_array = []
-with open(FLAPS) as FLAPS_CSV:
-    reader = csv.reader(FLAPS_CSV, delimiter=',')
-    for row in reader:
-        if not row[0] == 'Unit ID':
-            FLAPS_array.append(row)
-FLAPS_array = np.array(FLAPS_array)
-print "count FLAPS_array " + str(len(FLAPS_array)) # REMOVE THIS LATER
+    # Generate a numpy array from FLAPS. This will be used to add to and remove from
+    # the currently_infected_farms array.
+    FLAPS_array = []
+    with open(FLAPS) as FLAPS_CSV:
+        reader = csv.reader(FLAPS_CSV, delimiter=',')
+        for row in reader:
+            if not row[0] == 'Unit ID':
+                FLAPS_array.append(row)
+    FLAPS_array = np.array(FLAPS_array)
+
+    return epidemic_curve, FLAPS_array
+
+epidemic_curve, FLAPS_array = read_CSVs()
+
 
 def create_quarantine_zone(output_path, current_iteration, previously_infected_farms, selection_type='random', random_seed=None):
     """
@@ -56,10 +60,12 @@ def create_quarantine_zone(output_path, current_iteration, previously_infected_f
     def buffer(farms_to_quarantine, output_file_path, buffer_dist=7):
 
         # Create blank table based on FLAPS. Use 'in_memory' once you are done testing.
-        temp_table = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Test_GDB.gdb'
+        temp_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Test_GDB.gdb'
+        temp_name = 'temp_table'
+        temp_table = os.path.join(temp_location, temp_name)
         if arcpy.Exists(temp_table):
             arcpy.Delete_management(temp_table)
-        arcpy.CreateTable_management(temp_table, 'temp_table', FLAPS)
+        arcpy.CreateTable_management(temp_location, temp_name, FLAPS)
 
         # Fill table with the infected FLAPS points.
         fields = ['Unit ID', 'Production Type', 'Cattle', 'Goats', 'Sheep', 'Swine',
@@ -72,7 +78,7 @@ def create_quarantine_zone(output_path, current_iteration, previously_infected_f
         # Make a point feature class out of the table.
         x_coords = "Longitude"
         y_coords = "Latitude"
-        arcpy.management.XYTableToPoint_management(temp_table, temp_table+'_fc',
+        arcpy.management.XYTableToPoint(temp_table, temp_table+'_fc',
                                 x_coords, y_coords)
 
         # Buffer the feature class.
@@ -93,7 +99,6 @@ def create_quarantine_zone(output_path, current_iteration, previously_infected_f
         return selected_points
 
     def infection_spreads():
-        global currently_infected_farms, newly_infected_farms, previously_infected_farms
         # Set up for random seeding in case we want to make the results repeatable.
         if random_seed is not None:
             random.seed(random_seed)
@@ -102,17 +107,16 @@ def create_quarantine_zone(output_path, current_iteration, previously_infected_f
             # Randomly sample (without replacement) a number of uninfected farms equal to the current
             # number of farms that should be infected at this stage of the epidemic curve.
             print "uninfected_farms:" + str(len(uninfected_farms)) # REMOVE THIS LATER
+            print uninfected_farms[0:5, 0]
             print "farms to infect: " + str(epidemic_curve[current_iteration,0])
-            #newly_infected_farms = random.sample(uninfected_farms, epidemic_curve[current_iteration,0])
-            newly_infected_farms = random.sample(uninfected_farms, 4)
-            print "newly infected farms: ", newly_infected_farms
+            newly_infected_farms = random.sample(uninfected_farms, int(epidemic_curve[current_iteration,0]))
+            print "newly infected farms: ", len(newly_infected_farms)
             print "previously infected farms:", previously_infected_farms
 
             # Make an array of all the infected farms
-            if previously_infected_farms == np.array([]):
+            if previously_infected_farms.size == 0:
                 currently_infected_farms = newly_infected_farms
             else:
-
                 currently_infected_farms = np.concatenate( (previously_infected_farms, newly_infected_farms), axis=1 )
 
             buffer(currently_infected_farms, output_path)
@@ -144,7 +148,7 @@ if __name__ == '__main__':
             if 'quarantine_zone' in filename:
                 arcpy.Delete_management(os.path.join(dirpath, filename))
 
-    for current_iteration in range (1, num_iterations+1):
+    for current_iteration in range (0, num_iterations):
         output_file = os.path.join(output_GDB, 'quarantine_zone_i' + str(current_iteration))
 
         # Create the quarantine buffer zone for this iteration, and save which farms are infected as
