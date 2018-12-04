@@ -17,82 +17,120 @@ def read_CSVs():
     # This needs to be tailored if the CSV is replaced or altered!
     epidemic_curve = []
     with open(epidemic_curve_CSV) as csv_file:
-        reader = csv.reader(csv_file, delimiter=',')
-        for row in reader:
+        epi_reader = csv.reader(csv_file, delimiter=',')
+        for row in epi_reader:
             if not row[0] == 'First day of the week':
                 epidemic_curve.append(row[1:])
+    #epidemic_curve = np.array(epidemic_curve, dtype={'names':('New Cases', 'Cumulative Cases'),
+    #                                                 'formats': ('u2', 'u2')})
+                                                    # See FLAPS_array section below to verify format types.
+    #epidemic_curve = np.array(epidemic_curve, dtype=[('New Cases', 'i4'), ('Cumulative Cases', 'i4')])
     epidemic_curve = np.array(epidemic_curve)
 
     # Generate a numpy array from FLAPS. This will be used to add to and remove from
     # the currently_infected_farms array.
     FLAPS_array = []
     with open(FLAPS) as FLAPS_CSV:
-        reader = csv.reader(FLAPS_CSV, delimiter=',')
-        for row in reader:
+        FLAPS_reader = csv.reader(FLAPS_CSV, delimiter=',')
+        for row in FLAPS_reader:
             if not row[0] == 'Unit ID':
                 FLAPS_array.append(row)
     FLAPS_array = np.array(FLAPS_array)
+                           #dtype={'names':('Unit ID', 'Production Type', 'Cattle', 'Goats',      # These were commented out because for some reason
+                           #                    'Sheep', 'Swine', 'X coordinate', 'Y coordinate',   # assigning names caused the numbers to change.
+                           #                    'FIPS', 'State', 'Latitude', 'Longitude'),
+                           #       'formats':('u4', 'U30', 'u2', 'u2',
+                           #                  'u2', 'u2', 'u4', 'u4',
+                           #                  'u2', 'U5', 'f8', 'f8')})
+                                           # To double check the types, feel free to look here:
+                                           # https://docs.scipy.org/doc/numpy-1.15.1/reference/arrays.dtypes.html'
+                                           # 'u4' - 32-bit unsigned integer, 'U30' - Unicode string with 30- characters,
+                                           # 'u2' - 16-bit unsigned integer, 'f8' - 64-bit floating-point number
+
+
 
     return epidemic_curve, FLAPS_array
 
 epidemic_curve, FLAPS_array = read_CSVs()
 
+def clear_GDB(GDB):
+    walk = arcpy.da.Walk(GDB)
+    for dirpath, dirnames, filenames in walk:
+        for filename in filenames:
+            arcpy.Delete_management(os.path.join(dirpath, filename))
 
-def create_quarantine_zone(output_path, current_iteration, previously_infected_farms, selection_type='random', random_seed=None):
-    """
-    Set selection_type='random' for equal probability of any point being selected, and selection_type='dw'
-    or selection_type='distance_weighted' for selecting points randomly weighted by distance.
-    :param input_point_data: The file path to the point shapefile or feature class with the farms to be infected.
-    :param current_iteration: The current step of the progression through the epidemic curve.
-    :return:
-    """
+def create_quarantine_zone(output_GDB, current_iteration, previously_infected_farms,
+                           selection_type='random', random_seed=None):
+
+    # Set selection_type='random' for equal probability of any point being selected, and selection_type='dw'
+    # or selection_type='distance_weighted' for selecting points randomly weighted by distance.
+
+    clear_GDB(output_GDB)
 
     previously_infected_farms = np.array(previously_infected_farms)
 
     # Create a list of all farms that were not infected in the previous iteration.
     uninfected_farms = []
     for farm in FLAPS_array:
-        if farm[0] not in previously_infected_farms[:0]:
+        # If previously_infected_farms is empty (meaning this is the first iteration),
+        # then just add everyting to the uninfected list.
+        if previously_infected_farms.size==0:
+            uninfected_farms.append(farm)
+        # Otherwise, add only the places that aren't in the previously_infected_farms array.
+        elif farm[0] not in previously_infected_farms[:,0]:
             uninfected_farms.append(farm)
     uninfected_farms = np.array(uninfected_farms)
     print("Uninfected farms: " + str(len(uninfected_farms)))
 
-    def buffer(farms_to_quarantine, output_file_path, buffer_dist=7):
+    def buffer(farms_to_quarantine, buffer_dist=7):
 
         # Create blank table based on FLAPS. Use 'in_memory' once you are done testing.
-        temp_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Test_GDB.gdb'
-        temp_name = 'temp_table'
-        temp_table = os.path.join(temp_location, temp_name)
-        if arcpy.Exists(temp_table):
-            arcpy.Delete_management(temp_table)
-        arcpy.CreateTable_management(temp_location, temp_name, FLAPS)
+        temp_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff'
+        temp_name = 'temp_CSV_i' + str(current_iteration) + '.csv'
+        temp_fc = os.path.join(temp_location, 'temp_fc_i' + str(current_iteration))
+        temp_fc_points = os.path.join(temp_location, 'Test_GDB.gdb', 'temp_fc_i' + str(current_iteration) + '_points')
 
-        # Fill table with the infected FLAPS points.
-        fields = ['Unit ID', 'Production Type', 'Cattle', 'Goats', 'Sheep', 'Swine',
-                  'X coordinate', 'Y coordinate', 'FIPS', 'State', 'Latitude', 'Longitude',]
-        with arcpy.da.InsertCursor(temp_table, fields) as cursor:
-            for farm in FLAPS_array[0]:
-                if farm[0] in farms_to_quarantine[:0]:
-                    cursor.insertRow(farm)
+        open(os.path.join(temp_location, temp_name), 'wb')
+        with open(os.path.join(temp_location, temp_name), 'ab') as g:
+            writer = csv.writer(g, dialect='excel')
+
+            # Fill table with the infected FLAPS points.
+            fields = ['Unit ID', 'Production Type', 'Cattle', 'Goats', 'Sheep', 'Swine',
+                      'X coordinate', 'Y coordinate', 'FIPS', 'State', 'Latitude', 'Longitude',]
+            writer.writerow(fields)
+
+            for farm in FLAPS_array:
+                if farm[0] in farms_to_quarantine[:,0]:
+                    writer.writerow(farm)
+
+        if arcpy.Exists(temp_fc):
+            arcpy.Delete_management(temp_fc)
+        if arcpy.Exists(temp_fc_points):
+            arcpy.Delete_management(temp_fc_points)
 
         # Make a point feature class out of the table.
         x_coords = "Longitude"
         y_coords = "Latitude"
-        arcpy.management.XYTableToPoint(temp_table, temp_table+'_fc',
-                                x_coords, y_coords)
+        spat_reference = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\GCS_WGS_1984.prj'
+        arcpy.MakeXYEventLayer_management(os.path.join(temp_location, temp_name), x_coords, y_coords,
+                                          temp_fc, spatial_reference=spat_reference)
+        arcpy.CopyFeatures_management(temp_fc, temp_fc_points)
 
         # Buffer the feature class.
         print("Buffering for iteration " + str(current_iteration))
-        arcpy.Buffer_analysis(in_features=input_points,
-                              out_feature_class=output_file_path,
-                              buffer_distance_or_field="%s Kilometers" %str(buffer_dist),
+        arcpy.Buffer_analysis(in_features=temp_fc_points,
+                              out_feature_class=output_GDB,
+                              buffer_distance_or_field="%s Kilometers" % str(buffer_dist),
                               line_side="FULL", line_end_type="ROUND",
-                              dissolve_option="ALL", dissolve_field="", method="PLANAR")
+                              dissolve_option="NONE", dissolve_field="", method="PLANAR")
+
+        #arcpy.Buffer_analysis(in_features="temp_fc_i0_points",
+        #                      out_feature_class="C:/Users/apddsouth/Documents/ArcGIS/Default.gdb/blurb",
+        #                      buffer_distance_or_field="7 Kilometers", line_side="FULL", line_end_type="ROUND",
+        #                      dissolve_option="ALL", dissolve_field="", method="PLANAR")
 
         # Delete the table and the feature class.
-        arcpy.Delete_management([temp_table, temp_table+'_fc'])
-
-
+        arcpy.Delete_management(temp_fc, temp_fc_points)
 
 
     def select_random_distance_weighted():
@@ -106,34 +144,25 @@ def create_quarantine_zone(output_path, current_iteration, previously_infected_f
         if selection_type == 'random':
             # Randomly sample (without replacement) a number of uninfected farms equal to the current
             # number of farms that should be infected at this stage of the epidemic curve.
-            print "uninfected_farms:" + str(len(uninfected_farms)) # REMOVE THIS LATER
-            print uninfected_farms[0:5, 0]
-            print "farms to infect: " + str(epidemic_curve[current_iteration,0])
-            newly_infected_farms = random.sample(uninfected_farms, int(epidemic_curve[current_iteration,0]))
-            print "newly infected farms: ", len(newly_infected_farms)
-            print "previously infected farms:", previously_infected_farms
+            newly_infected_farms = np.array(random.sample(uninfected_farms, int(epidemic_curve[current_iteration,0])))
 
-            # Make an array of all the infected farms
-            if previously_infected_farms.size == 0:
-                currently_infected_farms = newly_infected_farms
-            else:
-                currently_infected_farms = np.concatenate( (previously_infected_farms, newly_infected_farms), axis=1 )
 
-            buffer(currently_infected_farms, output_path)
+        elif selection_type == 'dw' or selection_type == 'distance_weighted':
+            newly_infected_farms = select_random_distance_weighted()
 
-            return currently_infected_farms
+        # Make an array of all the infected farms
+        if previously_infected_farms.size == 0:
+            currently_infected_farms = newly_infected_farms
+        else:
+            currently_infected_farms = np.concatenate((previously_infected_farms, newly_infected_farms), axis=0)
 
-        elif selection_type=='dw' or selection_type=='distance_weighted':
-            buffer(select_random_distance_weighted(), output_path)
+        buffer(currently_infected_farms)
 
+        return currently_infected_farms
 
     return infection_spreads()
 
-def clear_GDB(GDB):
-    walk = arcpy.da.Walk(GDB)
-    for dirpath, dirnames, filenames in walk:
-        for filename in filenames:
-            arcpy.Delete_management(os.path.join(dirpath, filename))
+
 
 if __name__ == '__main__':
     print("Script starting...")

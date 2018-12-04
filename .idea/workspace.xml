@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="01f7e717-3449-4cbd-b0d5-f2e91bff7d8c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Iterative_Infection.py" beforeDir="false" afterPath="$PROJECT_DIR$/Iterative_Infection.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,53 +15,39 @@
     <session id="2100738782">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="3" />
+          <entry key="project.closed" value="6" />
           <entry key="project.open.time.1" value="1" />
-          <entry key="project.open.time.4" value="1" />
-          <entry key="project.open.time.5" value="2" />
-          <entry key="project.opened" value="4" />
+          <entry key="project.open.time.4" value="2" />
+          <entry key="project.open.time.5" value="4" />
+          <entry key="project.opened" value="7" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="3" />
+          <entry key="py" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="3" />
+          <entry key="Python" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Iterative_Infection" value="656" />
-          <entry key="Python Console" value="3061" />
-          <entry key="py" value="7345" />
+          <entry key="Iterative_Infection" value="1916" />
+          <entry key="Python Console" value="5055" />
+          <entry key="py" value="10601" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="11062" />
+          <entry key="Python" value="17572" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Iterative_Infection.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1048">
-              <caret line="126" column="37" lean-forward="true" selection-start-line="126" selection-start-column="37" selection-end-line="126" selection-end-column="37" />
-              <folding>
-                <element signature="e#124#133#0" expanded="true" />
-                <marker date="1543510513471" expanded="true" signature="4240:4277" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -77,6 +64,13 @@
       <find>delete</find>
       <find>Delete</find>
       <find>previous</find>
+      <find>previously</find>
+      <find>newly_infected_farms</find>
+      <find>epidemic_curve</find>
+      <find>buffer</find>
+      <find>farms_to</find>
+      <find>currently</find>
+      <find>IT</find>
     </findStrings>
     <replaceStrings>
       <replace>FLAPS_array</replace>
@@ -119,6 +113,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -205,9 +200,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1913" y="-353" width="1734" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2580645" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26702508" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -219,8 +213,9 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.329718" />
-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.20816968" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50059736" side_tool="true" weight="0.20816968" />
+      <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49940264" weight="0.20816968" />
+      <window_info anchor="bottom" id="Inspection Results" order="11" weight="0.3299293" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -236,29 +231,37 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Iterative_Infection.py</url>
-          <line>103</line>
-          <option name="timeStamp" value="2" />
+          <line>137</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/TEST.py" />
-    <entry file="file://$PROJECT_DIR$/Iterative_Infection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1048">
-          <caret line="126" column="37" lean-forward="true" selection-start-line="126" selection-start-column="37" selection-end-line="126" selection-end-column="37" />
-          <folding>
-            <element signature="e#124#133#0" expanded="true" />
-            <marker date="1543510513471" expanded="true" signature="4240:4277" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../RS_Python_Scripts_GitHub/Automated_Review.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6239">
           <caret line="374" column="34" selection-start-line="373" selection-start-column="4" selection-end-line="374" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../Previous_Projects/Original_FMD_Truck_Project/FMD stuff/FMD Project/Python Programs/extracting_statistics_Milk_Truck_Model_v3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="86" column="81" lean-forward="true" selection-start-line="86" selection-start-column="81" selection-end-line="86" selection-end-column="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Iterative_Infection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="138" lean-forward="true" selection-start-line="138" selection-end-line="138" />
+          <folding>
+            <element signature="e#124#133#0" expanded="true" />
+            <marker date="1543871904447" expanded="true" signature="3936:3946" ph="..." />
+            <marker date="1543871904447" expanded="true" signature="6665:6702" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
