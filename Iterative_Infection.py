@@ -82,7 +82,7 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
     uninfected_farms = np.array(uninfected_farms)
     print("Uninfected farms: " + str(len(uninfected_farms)))
 
-    def buffer(farms_to_quarantine, buffer_dist=7):
+    def do_buffer(farms_to_quarantine, buffer_dist=7):
 
         # Create blank table based on FLAPS. Use 'in_memory' once you are done testing.
         temp_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff'
@@ -156,7 +156,7 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
         else:
             currently_infected_farms = np.concatenate((previously_infected_farms, newly_infected_farms), axis=0)
 
-        buffer(currently_infected_farms)
+        do_buffer(currently_infected_farms)
 
         return currently_infected_farms
 
