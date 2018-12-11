@@ -4,28 +4,29 @@
 import os
 import csv
 import arcpy
-import random
 import numpy as np
 
-
-epidemic_curve_CSV = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_sent_by_Amy\Epi_Curve.csv'
 FLAPS = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Source_Data\FLAPS_National_Farm_File_MI.csv'
 output_GDB = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations.gdb'
 
-def read_CSVs():
-    # Generate a numpy array based on epidemic_curve_CSV.
-    # This needs to be tailored if the CSV is replaced or altered!
-    epidemic_curve = []
-    with open(epidemic_curve_CSV) as csv_file:
-        epi_reader = csv.reader(csv_file, delimiter=',')
-        for row in epi_reader:
-            if not row[0] == 'First day of the week':
-                epidemic_curve.append(row[1:])
+# The source for the following epidemic curve data are from thsi: r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_sent_by_Amy\Epi_Curve.csv'
+# Note that these data were originally in a per-week format, but they have been combined to a bi-weekly format.
+# The date in the annotation is the first day of the corresponding weeks of the UK FMD outbreak.
+epidemic_curve = np.array([
+    7 + 62,       # 2/20/2001 and 2/27/2001
+    104 + 153,    # 3/6/2001 and 3/13/2001
+    289 + 299,    # 3/20/2001 and 3/30/2001
+    221 + 190,    # 4/3/2001 and 4/10/2001
+    110 + 77, ])  # 4/17/2001 and 4/24/2001
+
+
+def read_CSV():
+
+    # The following code is left in case we do want to try to do structured arrays.
     #epidemic_curve = np.array(epidemic_curve, dtype={'names':('New Cases', 'Cumulative Cases'),
     #                                                 'formats': ('u2', 'u2')})
                                                     # See FLAPS_array section below to verify format types.
     #epidemic_curve = np.array(epidemic_curve, dtype=[('New Cases', 'i4'), ('Cumulative Cases', 'i4')])
-    epidemic_curve = np.array(epidemic_curve)
 
     # Generate a numpy array from FLAPS. This will be used to add to and remove from
     # the currently_infected_farms array.
@@ -49,11 +50,11 @@ def read_CSVs():
 
 
 
-    return epidemic_curve, FLAPS_array
+    return FLAPS_array
 
-epidemic_curve, FLAPS_array = read_CSVs()
+FLAPS_array = read_CSV()
 
-def clear_GDB(GDB):
+def clear_GDB(GDB):     # THIS MAY DELETE THE GDB ITSELF. NEED TO CHECK ON THIS FUNCTION.
     walk = arcpy.da.Walk(GDB)
     for dirpath, dirnames, filenames in walk:
         for filename in filenames:
@@ -73,8 +74,8 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
     uninfected_farms = []
     for farm in FLAPS_array:
         # If previously_infected_farms is empty (meaning this is the first iteration),
-        # then just add everyting to the uninfected list.
-        if previously_infected_farms.size==0:
+        # then just add everything to the uninfected list.
+        if previously_infected_farms.size == 0:
             uninfected_farms.append(farm)
         # Otherwise, add only the places that aren't in the previously_infected_farms array.
         elif farm[0] not in previously_infected_farms[:,0]:
@@ -82,7 +83,15 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
     uninfected_farms = np.array(uninfected_farms)
     print("Uninfected farms: " + str(len(uninfected_farms)))
 
-    def buffer(farms_to_quarantine, buffer_dist=7):
+    # Now do the same process, but only collect the dairies. This will be used to sample the primary (original)
+    # infected farm that infects all the others.
+    dairies = []
+    for farm in FLAPS_array:
+        if farm[1] == 'dairy_l' or farm[1] == 'dairy_s':
+            dairies.append(farm)
+    dairies = np.array(dairies)
+
+    def buffer_infected_farms(farms_to_quarantine, buffer_dist=7):
 
         # Create blank table based on FLAPS. Use 'in_memory' once you are done testing.
         temp_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff'
@@ -139,24 +148,35 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
     def infection_spreads():
         # Set up for random seeding in case we want to make the results repeatable.
         if random_seed is not None:
-            random.seed(random_seed)
+            np.random.seed(seed=random_seed)
 
+        # Randomly sample (without replacement) a number of uninfected farms equal to the current
+        # number of farms that should be infected at this stage of the epidemic curve.
         if selection_type == 'random':
-            # Randomly sample (without replacement) a number of uninfected farms equal to the current
-            # number of farms that should be infected at this stage of the epidemic curve.
-            newly_infected_farms = np.array(random.sample(uninfected_farms, int(epidemic_curve[current_iteration,0])))
 
+            # This variable saves the unique IDs of the farms
+            newly_infected_farms = np.random.choice(uninfected_farms,
+                                                        int(epidemic_curve[current_iteration]),
+                                                        replace=False, p=None)
+
+            # If this is the first iteration, first quarantine zone, then replace the first farm with
+            # a dairy farm.
+            if previously_infected_farms.size == 0:
+                newly_infected_farms[0] == np.random.choice(dairies, 1)# Select one farm from only dairies and replace the first farm of `newly_infected_farms`.
 
         elif selection_type == 'dw' or selection_type == 'distance_weighted':
             newly_infected_farms = select_random_distance_weighted()
 
         # Make an array of all the infected farms
         if previously_infected_farms.size == 0:
+            # `currently_infected_farms` should be a numpy array that contains the only Unit IDs
+            # of the infected farms. It does not hold any demographic information.
             currently_infected_farms = newly_infected_farms
         else:
+            # Add the newly infected farms to the array of farms that were infected in a previous iteration.
             currently_infected_farms = np.concatenate((previously_infected_farms, newly_infected_farms), axis=0)
 
-        buffer(currently_infected_farms)
+        buffer_infected_farms(currently_infected_farms)
 
         return currently_infected_farms
 
