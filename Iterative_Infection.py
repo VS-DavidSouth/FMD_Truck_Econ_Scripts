@@ -5,9 +5,17 @@ import os
 import csv
 import arcpy
 import numpy as np
+from check_time import check_time
 
+# Define the csv file that contains the FLAPS information for Michigan.
 FLAPS = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Source_Data\FLAPS_National_Farm_File_MI.csv'
-output_GDB = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations.gdb'
+# Define where the script should save the output files.
+output_GDBs = [r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations.gdb',
+               r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations2.gdb',
+               r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations3.gdb',]
+# Define where the script should look to generate the list of upper peninsula FLAPS points (which shouldn't be
+# selected randomly.
+Michigan_UP = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Other_relevant_files.gdb\Michigan_FLAPS_upper_peninsula'
 
 # The source for the following epidemic curve data are from thsi: r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_sent_by_Amy\Epi_Curve.csv'
 # Note that these data were originally in a per-week format, but they have been combined to a bi-weekly format.
@@ -20,7 +28,14 @@ epidemic_curve = np.array([
     110 + 77, ])  # 4/17/2001 and 4/24/2001
 
 
-def read_CSV():
+def load_FLAPS():
+
+    # Find all the farms in Michigan upper peninsula and make sure those aren't used for this script.
+    UP_farms = []
+    with arcpy.da.SearchCursor(Michigan_UP, ['Unit_ID']) as cursor:
+        for UP_farm in cursor:
+            UP_farms.append(str(UP_farm[0]))
+    UP_farms = np.array(UP_farms)
 
     # The following code is left in case we do want to try to do structured arrays.
     #epidemic_curve = np.array(epidemic_curve, dtype={'names':('New Cases', 'Cumulative Cases'),
@@ -35,7 +50,8 @@ def read_CSV():
         FLAPS_reader = csv.reader(FLAPS_CSV, delimiter=',')
         for row in FLAPS_reader:
             if not row[0] == 'Unit ID':
-                FLAPS_array.append(row)
+                if not row[0] in UP_farms:
+                    FLAPS_array.append(row)
     FLAPS_array = np.array(FLAPS_array)
                            #dtype={'names':('Unit ID', 'Production Type', 'Cattle', 'Goats',      # These were commented out because for some reason
                            #                    'Sheep', 'Swine', 'X coordinate', 'Y coordinate',   # assigning names caused the numbers to change.
@@ -52,21 +68,14 @@ def read_CSV():
 
     return FLAPS_array
 
-FLAPS_array = read_CSV()
+FLAPS_array = load_FLAPS()
 
-def clear_GDB(GDB):     # THIS MAY DELETE THE GDB ITSELF. NEED TO CHECK ON THIS FUNCTION.
-    walk = arcpy.da.Walk(GDB)
-    for dirpath, dirnames, filenames in walk:
-        for filename in filenames:
-            arcpy.Delete_management(os.path.join(dirpath, filename))
 
 def create_quarantine_zone(output_GDB, current_iteration, previously_infected_farms,
                            selection_type='random', random_seed=None):
 
     # Set selection_type='random' for equal probability of any point being selected, and selection_type='dw'
     # or selection_type='distance_weighted' for selecting points randomly weighted by distance.
-
-    clear_GDB(output_GDB)
 
     previously_infected_farms = np.array(previously_infected_farms)
 
@@ -76,10 +85,10 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
         # If previously_infected_farms is empty (meaning this is the first iteration),
         # then just add everything to the uninfected list.
         if previously_infected_farms.size == 0:
-            uninfected_farms.append(farm)
+            uninfected_farms.append(farm[0])
         # Otherwise, add only the places that aren't in the previously_infected_farms array.
-        elif farm[0] not in previously_infected_farms[:,0]:
-            uninfected_farms.append(farm)
+        elif farm[0] not in previously_infected_farms:
+            uninfected_farms.append(farm[0])
     uninfected_farms = np.array(uninfected_farms)
     print("Uninfected farms: " + str(len(uninfected_farms)))
 
@@ -109,7 +118,7 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
             writer.writerow(fields)
 
             for farm in FLAPS_array:
-                if farm[0] in farms_to_quarantine[:,0]:
+                if farm[0] in farms_to_quarantine:
                     writer.writerow(farm)
 
         if arcpy.Exists(temp_fc):
@@ -162,7 +171,8 @@ def create_quarantine_zone(output_GDB, current_iteration, previously_infected_fa
             # If this is the first iteration, first quarantine zone, then replace the first farm with
             # a dairy farm.
             if previously_infected_farms.size == 0:
-                newly_infected_farms[0] == np.random.choice(dairies, 1)# Select one farm from only dairies and replace the first farm of `newly_infected_farms`.
+                # Select one farm from only dairies and replace the first farm of `newly_infected_farms`.
+                newly_infected_farms[0] == np.random.choice(dairies[0], 1)
 
         elif selection_type == 'dw' or selection_type == 'distance_weighted':
             newly_infected_farms = select_random_distance_weighted()
@@ -189,19 +199,26 @@ if __name__ == '__main__':
     previously_infected_farms = np.array([[]])
     num_iterations = len(epidemic_curve)
 
-    # Go through output_folder and delete anything with 'quarantine_zone' in its name so that there aren't
-    # a whole bunch of old files floating around.
-    walk = arcpy.da.Walk(output_GDB)
-    for dirpath, dirnames, filenames in walk:
-        for filename in filenames:
-            if 'quarantine_zone' in filename:
-                arcpy.Delete_management(os.path.join(dirpath, filename))
+    for output_GDB in output_GDBs:
+        # Reset this variable so that it doesn't carry on into the next GDB
+        previously_infected_farms = []
 
-    for current_iteration in range (0, num_iterations):
-        output_file = os.path.join(output_GDB, 'quarantine_zone_i' + str(current_iteration))
+        # Go through output_folder and delete anything with 'quarantine_zone' in its name so that there aren't
+        # a whole bunch of old files floating around.
+        walk = arcpy.da.Walk(output_GDB)
+        for dirpath, dirnames, filenames in walk:
+            for filename in filenames:
+                if 'quarantine_zone' in filename:
+                    arcpy.Delete_management(os.path.join(dirpath, filename))
 
-        # Create the quarantine buffer zone for this iteration, and save which farms are infected as
-        # the previously_infected_farms variable, so you can use it for the next iteration.
-        previously_infected_farms = create_quarantine_zone(output_file, current_iteration, previously_infected_farms)
+        for current_iteration in range (0, num_iterations):
+            output_file = os.path.join(output_GDB, 'quarantine_zone_i' + str(current_iteration))
 
+            # Create the quarantine buffer zone for this iteration, and save which farms are infected as
+            # the previously_infected_farms variable, so you can use it for the next iteration.
+            previously_infected_farms = create_quarantine_zone(output_file, current_iteration, previously_infected_farms)
+
+        print "The script has taken", check_time(), "so far.\n"
+
+    print "Total time to run the script:", check_time()
     print ("~~~~~~~Script Completed!~~~~~~~")
