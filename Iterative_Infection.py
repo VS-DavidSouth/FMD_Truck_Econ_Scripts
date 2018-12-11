@@ -14,9 +14,9 @@ output_GDB = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Qu
 # The date in the annotation is the first day of the corresponding weeks of the UK FMD outbreak.
 epidemic_curve = np.array([
     7 + 62,       # 2/20/2001 and 2/27/2001
-    104 + 153,    # 3/6/2001 and 3/13/2001
+    104 + 153,    # 3/6/2001  and 3/13/2001
     289 + 299,    # 3/20/2001 and 3/30/2001
-    221 + 190,    # 4/3/2001 and 4/10/2001
+    221 + 190,    # 4/3/2001  and 4/10/2001
     110 + 77, ])  # 4/17/2001 and 4/24/2001
 
 
