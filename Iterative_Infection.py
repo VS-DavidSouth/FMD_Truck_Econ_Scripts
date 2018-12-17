@@ -9,23 +9,29 @@ from check_time import check_time
 
 # Define the csv file that contains the FLAPS information for Michigan.
 FLAPS = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Source_Data\FLAPS_National_Farm_File_MI.csv'
-# Define where the script should save the output files.
-output_GDBs = [r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations.gdb',
-               r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations2.gdb',
-               r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations3.gdb',]
+# Define where the script should save the output files. Beware that when this script runs, it will delete
+# any files in the GDB that have 'quarantine_zone' in the file name to ensure that outdated files
+# don't stick around.
+output_GDBs = []
+
 # Define where the script should look to generate the list of upper peninsula FLAPS points (which shouldn't be
 # selected randomly.
 Michigan_UP = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Other_relevant_files.gdb\Michigan_FLAPS_upper_peninsula'
 
-# The source for the following epidemic curve data are from thsi: r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_sent_by_Amy\Epi_Curve.csv'
+# The source for the following epidemic curve data are from this file:
+#       r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Stuff_sent_by_Amy\Epi_Curve.csv'
 # Note that these data were originally in a per-week format, but they have been combined to a bi-weekly format.
 # The date in the annotation is the first day of the corresponding weeks of the UK FMD outbreak.
+# To better model the data, the number of infected farms is scaled by the ratio of Michigan livestock counts
+# to that of the UK at the time of the outbreak (discounting sheep).
+MI_UK_ratio = 0.17  # This should be a number >0 and <=1.
 epidemic_curve = np.array([
     7 + 62,       # 2/20/2001 and 2/27/2001
     104 + 153,    # 3/6/2001  and 3/13/2001
     289 + 299,    # 3/20/2001 and 3/30/2001
     221 + 190,    # 4/3/2001  and 4/10/2001
     110 + 77, ])  # 4/17/2001 and 4/24/2001
+epidemic_curve = np.round(epidemic_curve * MI_UK_ratio)
 
 
 def load_FLAPS():
@@ -64,9 +70,8 @@ def load_FLAPS():
                                            # 'u4' - 32-bit unsigned integer, 'U30' - Unicode string with 30- characters,
                                            # 'u2' - 16-bit unsigned integer, 'f8' - 64-bit floating-point number
 
-
-
     return FLAPS_array
+
 
 FLAPS_array = load_FLAPS()
 
