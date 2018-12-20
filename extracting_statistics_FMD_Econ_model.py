@@ -30,6 +30,7 @@ from Iterative_Infection import epidemic_curve
 #
 
 csv_location = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\Results\results.csv'
+
 orders_solved_no_quarantine = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\no_quarantine_orders_solved'
 orders_list = [
     r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i0_orders',
@@ -45,6 +46,15 @@ orders_solved_list = [
     r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i2_orders_solved',
     r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i3_orders_solved',
     r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i4_orders_solved',
+    ]
+
+routes_solved_no_quarantine = r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\no_quarantine_routes_solved'
+routes_solved_list = [
+    r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i0_routes_solved',
+    r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i1_routes_solved',
+    r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i2_routes_solved',
+    r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i3_routes_solved',
+    r'C:\Users\apddsouth\Documents\FMD_Truck_Econ_Paper\ArcMap_stuff\Quarantine_Iterations_a.gdb\quarantine_zone_i4_routes_solved',
     ]
 
 #
@@ -71,6 +81,25 @@ def total_milk_at_each_creamery(orders_solved):
     return milk_list
 
 
+def find_average_route_distance_per_creamery(routes_solved):
+    # Create a lists of lists, with one sublist for each Depot.
+    route_list = [[] for thing in range (0,16)]
+    with arcpy.da.SearchCursor(routes_solved, ['StartDepotName', 'OrderCount', 'TotalDistance']) as search_cursor:
+        for row in search_cursor:
+            # If the route picked up milk at at least one place:
+            if row[1] is not None:
+                # Save the distance (in meters) it to `route_list` for the corresponding depot.
+                route_list[int(row[0])] += [int(row[2])]
+
+    # Now convert each sublist to a route average for that sublist. We don't need the individual info.
+    for index in range(0, len(route_list)):
+        if not len(route_list[index]) == 0:
+            route_list[index] = int(round(
+                                          float(sum(route_list[index])) / float(len(route_list[index]))
+                                    )     )
+    return route_list
+
+
 def find_unsatisfied_milk(orders_file):
     # Define milk_list, which will be used to store each instance of unsatisfied milk.
     milk_list = []
@@ -87,7 +116,7 @@ def find_unsatisfied_milk(orders_file):
     return sum(milk_list)
 
 
-def write_to_CSV(CSV, iteration, orders, orders_solved, new_CSV=False):
+def write_to_CSV(CSV, iteration, orders, orders_solved, routes_solved, new_CSV=False):
     if new_CSV:
         # First, clear the CSV of anything that it contained before, or create it
         # if it didn't previously exist.
@@ -96,18 +125,20 @@ def write_to_CSV(CSV, iteration, orders, orders_solved, new_CSV=False):
         # Now write the first row with the field labels.
         with open(CSV, 'ab') as g:
             writer = csv.writer(g, dialect='excel')
-            writer.writerow(['iteration', 'c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8',
-                             'c9', 'c10', 'c11', 'c12', 'c13', 'c14', 'c15',
-                             'Unsatisfied milk in quarantine zones',
+            writer.writerow(['iteration',] +
+                            ['c' + str(x) for x in range(0, 16)] +
+                            ['c' + str(y) + '_av_dist' for y in range(0, 16)] +
+                            ['Unsatisfied milk in quarantine zones',
                              'Unsatisfied milk indirectly caused by quarantine', ])
 
     # Collect values for the milk collected at each creamery during this period.
     milk_at_creameries = total_milk_at_each_creamery(orders_solved)
-
+    route_distance = find_average_route_distance_per_creamery(routes_solved)
     # Write a new line in the CSV
     with open(CSV, 'ab') as g:
         writer = csv.writer(g, dialect='excel')
-        writer.writerow([iteration] + milk_at_creameries +
+        writer.writerow([iteration] +
+                        milk_at_creameries + route_distance +
                         [find_unsatisfied_milk(orders), find_unsatisfied_milk(orders_solved)])
 
     return None
@@ -125,10 +156,14 @@ if __name__ == '__main__':
         if iteration == -1:
             orders_file = orders_solved_no_quarantine
             orders_solved_file = orders_solved_no_quarantine
-            write_to_CSV(csv_location, iteration, orders_file, orders_solved_file, new_CSV=True)
+            routes_solved_file = routes_solved_no_quarantine
+            write_to_CSV(csv_location, iteration, orders_file,
+                         orders_solved_file, routes_solved_file, new_CSV=True)
         else:
             orders_file = orders_list[iteration]
             orders_solved_file = orders_solved_list[iteration]
-            write_to_CSV(csv_location, iteration, orders_file, orders_solved_file)
+            routes_solved_file = routes_solved_list[iteration]
+            write_to_CSV(csv_location, iteration, orders_file,
+                         orders_solved_file, routes_solved_file)
 
     print "Script completed! H*ck yes. Sorry for cursing. I am excite."
