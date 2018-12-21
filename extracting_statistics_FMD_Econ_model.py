@@ -23,6 +23,7 @@
 import os
 import csv
 import arcpy
+import numpy as np
 from Iterative_Infection import epidemic_curve
 
 #
@@ -81,9 +82,9 @@ def total_milk_at_each_creamery(orders_solved):
     return milk_list
 
 
-def find_average_route_distance_per_creamery(routes_solved):
+def find_average_route_distance_per_creamery(routes_solved, whole_model_average=False):
     # Create a lists of lists, with one sublist for each Depot.
-    route_list = [[] for thing in range (0,16)]
+    route_list = [ [] for thing in range(0, 16)]
     with arcpy.da.SearchCursor(routes_solved, ['StartDepotName', 'OrderCount', 'TotalDistance']) as search_cursor:
         for row in search_cursor:
             # If the route picked up milk at at least one place:
@@ -91,12 +92,21 @@ def find_average_route_distance_per_creamery(routes_solved):
                 # Save the distance (in meters) it to `route_list` for the corresponding depot.
                 route_list[int(row[0])] += [int(row[2])]
 
-    # Now convert each sublist to a route average for that sublist. We don't need the individual info.
-    for index in range(0, len(route_list)):
-        if not len(route_list[index]) == 0:
-            route_list[index] = int(round(
-                                          float(sum(route_list[index])) / float(len(route_list[index]))
-                                    )     )
+    if not whole_model_average:
+        # Now convert each sublist to a route average for that sublist. We don't need the individual info.
+        for index in range(0, len(route_list)):
+            if not len(route_list[index]) == 0:
+                route_list[index] = int(round(
+                                              np.average(route_list[index])))
+            else:
+                route_list[index] = 0
+    elif whole_model_average:
+        temp_list = []
+        if not len(route_list) == 0:
+            for sublist in route_list:
+                for item in sublist:
+                    temp_list += [item]
+        route_list = [int(round(np.average(temp_list)))]
     return route_list
 
 
@@ -129,17 +139,22 @@ def write_to_CSV(CSV, iteration, orders, orders_solved, routes_solved, new_CSV=F
                             ['c' + str(x) for x in range(0, 16)] +
                             ['c' + str(y) + '_av_dist' for y in range(0, 16)] +
                             ['Unsatisfied milk in quarantine zones',
-                             'Unsatisfied milk indirectly caused by quarantine', ])
+                             'Unsatisfied milk indirectly caused by quarantine',
+                             'Whole_model_av_distance'])
 
     # Collect values for the milk collected at each creamery during this period.
     milk_at_creameries = total_milk_at_each_creamery(orders_solved)
-    route_distance = find_average_route_distance_per_creamery(routes_solved)
+    av_route_dist = find_average_route_distance_per_creamery(routes_solved)
+    av_route_dist_whole_model = find_average_route_distance_per_creamery(routes_solved, whole_model_average=True)
+
     # Write a new line in the CSV
     with open(CSV, 'ab') as g:
         writer = csv.writer(g, dialect='excel')
         writer.writerow([iteration] +
-                        milk_at_creameries + route_distance +
-                        [find_unsatisfied_milk(orders), find_unsatisfied_milk(orders_solved)])
+                        milk_at_creameries +
+                        av_route_dist +
+                        [find_unsatisfied_milk(orders), find_unsatisfied_milk(orders_solved)] +
+                        av_route_dist_whole_model)
 
     return None
 

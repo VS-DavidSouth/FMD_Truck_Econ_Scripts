@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="01f7e717-3449-4cbd-b0d5-f2e91bff7d8c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/extracting_statistics_FMD_Econ_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/extracting_statistics_FMD_Econ_model.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,33 +15,33 @@
     <session id="2100738782">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="14" />
+          <entry key="project.closed" value="16" />
           <entry key="project.open.time.1" value="1" />
-          <entry key="project.open.time.4" value="7" />
+          <entry key="project.open.time.4" value="8" />
           <entry key="project.open.time.5" value="8" />
-          <entry key="project.opened" value="16" />
+          <entry key="project.opened" value="17" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="16" />
+          <entry key="py" value="19" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="16" />
+          <entry key="Python" value="19" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="Iterative_Infection" value="2393" />
-          <entry key="Python Console" value="8194" />
-          <entry key="py" value="21815" />
+          <entry key="Python Console" value="8408" />
+          <entry key="py" value="23016" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="32402" />
+          <entry key="Python" value="33817" />
         </counts>
       </usages-collector>
     </session>
@@ -62,11 +63,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/extracting_statistics_FMD_Econ_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="482">
-              <caret line="94" selection-start-line="94" selection-end-line="94" />
+            <state relative-caret-position="362">
+              <caret line="110" lean-forward="true" selection-start-line="110" selection-end-line="110" />
               <folding>
                 <element signature="e#1048#1057#0" expanded="true" />
-                <marker date="1545342366132" expanded="true" signature="4765:5623" ph="..." />
               </folding>
             </state>
           </provider>
@@ -104,6 +104,7 @@
       <find>cursor</find>
       <find>Complet</find>
       <find>orders_solved</find>
+      <find>REMOVE</find>
     </findStrings>
     <replaceStrings>
       <replace>FLAPS_array</replace>
@@ -280,9 +281,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1913" y="-353" width="1734" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2980884" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.30167264" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -290,7 +290,7 @@
       <window_info anchor="bottom" id="Debug" order="2" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
-      <window_info active="true" anchor="bottom" id="Run" order="5" visible="true" weight="0.23644933" />
+      <window_info anchor="bottom" id="Run" order="5" weight="0.23644933" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3299293" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3299293" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.32914376" />
@@ -379,13 +379,32 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../../Previous_Projects/Original_FMD_Truck_Project/FMD stuff/Davids_work backup 8-16-17/Feed_Truck_Model/Python/extracting_statistics_feed_truck_model_v3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="14" column="21" selection-start-line="14" selection-start-column="21" selection-end-line="14" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../Previous_Projects/Original_FMD_Truck_Project/FMD stuff/Davids_work backup 8-16-17/Milk_Truck_Model/Python/Milk_delivery_field.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../Previous_Projects/Original_FMD_Truck_Project/FMD stuff/Davids_work backup 8-16-17/Milk_Truck_Model/Python/extracting_statistics_Milk_Truck_Model_v3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1377">
+          <caret line="15" column="21" selection-start-line="15" selection-start-column="21" selection-end-line="15" selection-end-column="21" />
+          <folding>
+            <element signature="e#656#684#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/extracting_statistics_FMD_Econ_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="482">
-          <caret line="94" selection-start-line="94" selection-end-line="94" />
+        <state relative-caret-position="362">
+          <caret line="110" lean-forward="true" selection-start-line="110" selection-end-line="110" />
           <folding>
             <element signature="e#1048#1057#0" expanded="true" />
-            <marker date="1545342366132" expanded="true" signature="4765:5623" ph="..." />
           </folding>
         </state>
       </provider>
